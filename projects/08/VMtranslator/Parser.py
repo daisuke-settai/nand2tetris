@@ -2,17 +2,18 @@ import re
 from CommandType import CommandType
 
 CMD_TYPE_REGREPS = {
-    CommandType.C_ARITHMETIC: re.compile("^((?:add)|(?:sub)|(?:neg)|(?:eq)|" +\
-    "(?:gt)|(?:lt)|(?:and)|(?:or)|(?:not))$"),
+    CommandType.C_ARITHMETIC: re.compile("^((?:add)|(?:sub)|(?:neg)|(?:eq)|" +
+                                         "(?:gt)|(?:lt)|(?:and)|(?:or)|(?:not))$"),
     CommandType.C_PUSH: re.compile("^push[\s]+([\w]+)[\s]+([\d]+)$"),
     CommandType.C_POP: re.compile("^pop[\s]+([\w]+)[\s]+([\d]+)$"),
-    CommandType.C_LABEL: re.compile("^$"),
-    CommandType.C_GOTO: re.compile("^$"),
-    CommandType.C_IF: re.compile("^$"),
-    CommandType.C_FUNCTION: re.compile("^$"),
-    CommandType.C_RETURN: re.compile("^$"),
-    CommandType.C_CALL: re.compile("^$"),
+    CommandType.C_LABEL: re.compile("^label[\s]+([\w]+[\w\d_.:]*)$"),
+    CommandType.C_GOTO: re.compile("^goto[\s]+([\w_.:]+[\w\d_.:]*)$"),
+    CommandType.C_IF: re.compile("^if-goto[\s]+([\w_.:]+[\w\d_.:]*)$"),
+    CommandType.C_FUNCTION: re.compile("^function[\s]+([\w\d_.:]+)[\s]+([\d]+)$"),
+    CommandType.C_CALL: re.compile("^call[\s]+([\w\d_.:]+)[\s]+([\d]+)$"),
+    CommandType.C_RETURN: re.compile("^return$"),
 }
+
 
 class Parser():
 
@@ -21,6 +22,7 @@ class Parser():
         self.command = None
         self.command_type = None
         self.command_matched = None
+        self.line = 0
 
     def advance(self) -> bool:
         """
@@ -28,13 +30,14 @@ class Parser():
         """
         while True:
             line = self.file.readline()
+            self.line += 1
             if not line:
                 self.command = None
                 return False
-            line = line.strip()
             comment_i = line.find("//")
             if comment_i != -1:
                 line = line[:comment_i]
+            line = line.strip()
             if len(line) == 0:
                 continue
             self.command = line
